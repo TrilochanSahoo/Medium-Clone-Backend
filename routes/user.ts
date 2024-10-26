@@ -16,6 +16,12 @@ const user = new Hono<{
 
 
 user.use('/*', async(c,next)=>{
+    if(c.req.header("authorization") === undefined || c.req.header("authorization") === null){
+        c.status(401)
+        return c.json({
+            message : "Not authorized, please login"
+        })
+    }
     const authheader = c.req.header("authorization") || ""
     const authtoken = authheader.split(" ")[1]
 
@@ -58,87 +64,6 @@ user.use('/*', async(c,next)=>{
     }
 })
 
-user.post('/signup', async (c) => {
-
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-
-    try {
-        const body = await c.req.json()
-    
-        const user = await prisma.user.create({
-            data:{
-                email : body.email,
-                name : body.name,
-                password : body.password
-            }
-        })
-    
-        const payload = {
-            id: user.id
-        }
-        const secret = c.env.JWT_KEY
-        const token = await sign(payload, secret)
-    
-        return c.json({
-            message: "User created successfully",
-            auth : token
-        })
-        
-    } catch (error) {
-        c.status(411)
-        return c.json({
-            "message": "Email already taken / Incorrect inputs"
-        })
-        
-    }
-})
-
-
-
-user.post('/signin', async (c) => {
-
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-
-    try {
-        const body = await c.req.json()
-    
-        const user = await prisma.user.findFirst({
-            where:{
-                email : body.email,
-                password : body.password
-            }
-        })
-
-        if(user!= null){
-            const payload = {
-                id: user.id
-            }
-    
-            const secret = c.env.JWT_KEY
-            const token = await sign(payload, secret)
-        
-            return c.json({
-                auth : token
-            })
-        } 
-        else{
-            c.status(411)
-            return c.json({
-                message: "Error while logging in"
-            })
-        }
-    
-    } catch (error) {
-        c.status(411)
-        return c.json({
-            "message": "Incorrect Input."
-        })
-    }
-})
 
 user.put('/', async (c) => {
     const prisma = new PrismaClient({
