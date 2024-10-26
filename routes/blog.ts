@@ -69,7 +69,12 @@ blog.post('/', async(c)=>{
             data:{
                 title : body.title,
                 content : body.content,
+                category : body.category,
+                readTime : body.readTime,
+                tag : body.tag,
+                image : body.image,
                 published : body.published,
+                publishedDate : body.publishedDate,
                 authorId : c.get("userId")
             }
         })
