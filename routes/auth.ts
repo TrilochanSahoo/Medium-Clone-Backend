@@ -72,6 +72,7 @@ auth.post('/signin', async (c) => {
             const token = await sign(payload, secret)
         
             return c.json({
+                message: "User logged in successfully",
                 auth : token
             })
         } 
