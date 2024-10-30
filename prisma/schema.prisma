@@ -18,6 +18,7 @@ model User{
   gender String?
   dateofBirth DateTime?
   posts Post[]
+  postComment Post_Comment[]
 }
 
 model Post{
@@ -32,4 +33,25 @@ model Post{
   readTime String
   tag String
   image String
+  postDetails Post_Details[]
+  postComment Post_Comment[]
+}
+
+model Post_Details{
+  id String @id @default(uuid())
+  postUid String
+  post Post @relation(fields: [postUid], references: [id])
+  content String
+  headings String?
+  reactions Int
+}
+
+model Post_Comment{
+  id String @id @default(uuid())
+  postUid String
+  post Post @relation(fields: [postUid], references: [id])
+  createdBy String
+  author User @relation(fields: [createdBy], references: [id])
+  createdDate DateTime
+
 }
