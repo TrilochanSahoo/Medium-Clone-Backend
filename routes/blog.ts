@@ -96,7 +96,6 @@ blog.put('/',async(c)=>{
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
-
     try {
         const body = await c.req.json()
     
@@ -108,7 +107,12 @@ blog.put('/',async(c)=>{
             data : {
                 title : body.title,
                 content : body.content,
-                published : body.published
+                published : body.published,
+                category : body.category,
+                readTime : body.readTime,
+                tag : body.tag,
+                image : body.image,
+                publishedDate : body.publishedDate
             }
         })
 
