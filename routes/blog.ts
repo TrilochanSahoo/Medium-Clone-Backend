@@ -81,6 +81,7 @@ blog.post('/', async(c)=>{
     
         return c.json({
             message: "Blog posted successfully",
+            BlogInfo : blog
         })
         
     } catch (error) {
