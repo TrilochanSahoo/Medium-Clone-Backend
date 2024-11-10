@@ -12,13 +12,23 @@ model User{
   id String @id @default(uuid())
   email String @unique
   name String?
-  password String
+  password String?
   phone String?
   address String?
   gender String?
   dateofBirth DateTime?
+  externalLogin Boolean @default(false)
+  externalId Int?
+  externalProvider External_Provider? @relation(fields: [externalId], references: [externalID])
   posts Post[]
   postComment Post_Comment[]
+
+}
+
+model External_Provider{
+  externalID Int @id @default(autoincrement())
+  providerName String
+  user User[]
 }
 
 model Post{
