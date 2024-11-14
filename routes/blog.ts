@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { PrismaClient } from '@prisma/client/edge'
+import { Prisma, PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { sign, verify } from 'hono/jwt'
 
@@ -260,6 +260,9 @@ blog.get('/owned/:published',async (c)=>{
             where : {
                 published : (isPublished === "true"),
                 authorId : c.get("userId")
+            },
+            orderBy : {
+                publishedDate : 'desc'
             }
         })
 
@@ -272,6 +275,70 @@ blog.get('/owned/:published',async (c)=>{
         return c.json({
             "message": error
         })   
+    }
+})
+
+blog.post('/search',async (c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate()) 
+
+    try {
+        const body = await c.req.json()
+
+        let condition:Prisma.PostWhereInput = {
+            AND  : [] as Prisma.PostWhereInput[]
+        }
+
+        console.log(1)
+
+        if(body.type==="category"){
+            
+            (condition.AND as Prisma.PostWhereInput[]).push({ published: true });
+            (condition.AND as Prisma.PostWhereInput[]).push({category : body.info});
+        }
+        else{
+            (condition.AND as Prisma.PostWhereInput[]).push({published : true});
+            (condition.AND as Prisma.PostWhereInput[]).push({
+                    OR: [
+                        {title: {contains: body.info, mode: 'insensitive'}},
+                        {tag: {contains: body.info, mode: 'insensitive'}}
+                    ]
+                }
+            );
+        }
+        console.log(condition)
+        const blog = await prisma.post.findMany({
+            select:{
+                id :true, 
+                title :true, 
+                content :true, 
+                publishedDate :true,
+                category :true, 
+                readTime :true, 
+                tag :true, 
+                image :true, 
+                published : true,
+                author: {
+                    select : {
+                        name : true
+                    }
+                }
+            },
+            where : condition,
+            orderBy : {
+                publishedDate : 'desc'
+            }
+        })
+        return c.json({
+            bloginfo : blog
+        })
+        
+    } 
+    catch (error) {
+        return c.json({
+            "message": error
+        }) 
     }
 })
 
