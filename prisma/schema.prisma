@@ -17,6 +17,9 @@ model User{
   address String?
   gender String?
   dateofBirth DateTime?
+  bio String?
+  twitter String?
+  instagram String?
   externalLogin Boolean @default(false)
   externalId Int?
   externalProvider External_Provider? @relation(fields: [externalId], references: [externalID])

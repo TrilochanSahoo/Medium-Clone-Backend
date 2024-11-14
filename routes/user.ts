@@ -103,7 +103,20 @@ user.get('/', async (c) => {
 
     try {
     
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findUnique({
+            select : {
+                id : true,
+                email : true,
+                name : true,
+                password : true,
+                phone : true,
+                address : true,
+                gender : true,
+                dateofBirth : true,
+                bio : true,
+                twitter : true,
+                instagram : true, 
+            },
             where:{
                id : c.get("userId")
             }
@@ -121,6 +134,44 @@ user.get('/', async (c) => {
     }
 })
 
+user.get('/userProfileInfo/:id', async(c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate())
 
+    
+    try {
+        const userId = await c.req.param("id")
+        
+        const user = await prisma.user.findUnique({
+            select : {
+                id : true,
+                email : true,
+                name : true,
+                password : true,
+                phone : true,
+                address : true,
+                gender : true,
+                dateofBirth : true,
+                bio : true,
+                twitter : true,
+                instagram : true, 
+            },
+            where:{
+               id : userId
+            }
+        })
+
+        return c.json({
+            userInfo : user
+        })
+    
+    } catch (error) {
+        c.status(411)
+        return c.json({
+            "message": error
+        })
+    }
+})
 
 export default user
