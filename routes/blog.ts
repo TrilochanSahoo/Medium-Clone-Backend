@@ -68,7 +68,7 @@ blog.post('/', async(c)=>{
         const blog = await prisma.post.create({
             data:{
                 title : body.title,
-                content : body.content,
+                content : body.summary,
                 category : body.category,
                 readTime : body.readTime,
                 tag : body.tag,
@@ -76,6 +76,14 @@ blog.post('/', async(c)=>{
                 published : body.published,
                 publishedDate : body.publishedDate,
                 authorId : c.get("userId")
+            }
+        })
+
+        const blog_details = await prisma.post_Details.create({
+            data:{
+                postUid : blog.id,
+                content : body.content,
+                reactions : 0
             }
         })
     
@@ -107,13 +115,22 @@ blog.put('/',async(c)=>{
             },
             data : {
                 title : body.title,
-                content : body.content,
+                content : body.summary,
                 published : body.published,
                 category : body.category,
                 readTime : body.readTime,
                 tag : body.tag,
                 image : body.image,
                 publishedDate : body.publishedDate
+            }
+        })
+
+        const blog_details = await prisma.post_Details.updateMany({
+            where:{
+                postUid : body.blogId
+            },
+            data:{
+                content : body.content
             }
         })
 
@@ -138,7 +155,26 @@ blog.get('/bulk',async (c)=>{
     }).$extends(withAccelerate())
 
     try {
-        const blog = await prisma.post.findMany({})
+        const blog = await prisma.post.findMany({
+            select:{
+                id :true, 
+                title :true, 
+                content :true, 
+                publishedDate :true,
+                category :true, 
+                readTime :true, 
+                tag :true, 
+                image :true, 
+                author: {
+                    select : {
+                        name : true
+                    }
+                }
+            },
+            where : {
+                published : true
+            }
+        })
 
         return c.json({
             blogInfo : blog
@@ -150,7 +186,6 @@ blog.get('/bulk',async (c)=>{
             "message": error
         })   
     }
-
 })
 
 blog.get('/:id',async (c)=>{
@@ -161,8 +196,69 @@ blog.get('/:id',async (c)=>{
     try {
         const blogId = await c.req.param("id")
         const blog = await prisma.post.findFirst({
+            select:{
+                title: true,
+                category : true,
+                author : {
+                    select : {
+                        name: true
+                    }
+                },
+                publishedDate : true,
+                readTime : true,
+                image : true,
+                postDetails : {
+                    select : {
+                        content : true
+                    }
+                }
+            },
             where:{
                 id : blogId,
+                authorId : c.get("userId")
+            }
+        })
+
+        return c.json({
+            blogInfo : blog
+        })
+    } 
+    catch (error) {
+        c.status(411)
+        return c.json({
+            "message": error
+        })   
+    }
+})
+
+blog.get('/owned/:published',async (c)=>{
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate())
+
+    try {
+
+        const isPublished = await c.req.param("published")
+
+        const blog = await prisma.post.findMany({
+            select:{
+                id :true, 
+                title :true, 
+                content :true, 
+                publishedDate :true,
+                category :true, 
+                readTime :true, 
+                tag :true, 
+                image :true, 
+                published : true,
+                author: {
+                    select : {
+                        name : true
+                    }
+                }
+            },
+            where : {
+                published : (isPublished === "true"),
                 authorId : c.get("userId")
             }
         })
@@ -177,10 +273,7 @@ blog.get('/:id',async (c)=>{
             "message": error
         })   
     }
-
 })
-
-
 
 
 export default blog
