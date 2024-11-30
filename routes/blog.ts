@@ -214,8 +214,7 @@ blog.get('/:id',async (c)=>{
                 }
             },
             where:{
-                id : blogId,
-                authorId : c.get("userId")
+                id : blogId
             }
         })
 
